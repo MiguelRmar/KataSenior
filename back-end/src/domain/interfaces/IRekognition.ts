@@ -1,3 +1,3 @@
 export interface IRekognition {
-    credentials(): Promise<any>;
+    createLivenessSession(): Promise<any>;
 }

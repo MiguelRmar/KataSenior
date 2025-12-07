@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Version } from "@nestjs/common";
 import { RekognitionService } from "src/application/services/recognitionService";
 
 @Controller()
@@ -7,9 +7,10 @@ export class RekognitionController {
         private readonly rekognitionService: RekognitionService
     ) { }
 
-    @Get()
-    async credentials() {
-        return this.rekognitionService.credentials();
+    @Version("1")
+    @Get("create-liveness-session")
+    async createLivenessSession() {
+        return this.rekognitionService.createLivenessSession();
     }
 
 }
