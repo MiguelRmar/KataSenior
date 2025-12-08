@@ -33,7 +33,7 @@ export class RekognitionController {
     @Post("upload-document")
     async uploadDocument(@Body() body: any) {
         try {
-            const { imageData, documentType } = body;
+            const { imageData, documentType, fileName } = body;
 
             if (!imageData) {
                 return {
@@ -56,7 +56,10 @@ export class RekognitionController {
             }
 
             const documentId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            const s3Key = `documents/${documentId}.${contentType.split('/')[1] || 'jpg'}`;
+            const extension = contentType.split('/')[1] || 'jpg';
+            const s3Key = fileName
+                ? `documents/${fileName}.${extension}`
+                : `documents/${documentId}.${extension}`;
             const bucketName = this.configService.get<string>('AWS_BUCKET_S3', 'authenticator-bucket');
 
             const fileUrl = await this.s3Service.uploadFile(
@@ -100,6 +103,11 @@ export class RekognitionController {
             const detectionResult = await this.rekognitionService.detectLabels(bucketName, s3Key);
 
             console.log(`[DEBUG] Labels detected for ${s3Key} (Type: ${documentType}):`, JSON.stringify(detectionResult.Labels, null, 2));
+
+            // 2. Detect Text
+            const textDetectionResult = await this.rekognitionService.detectText(bucketName, s3Key);
+            const detectedText = textDetectionResult.TextDetections?.filter(t => t.Type === 'LINE').map(t => t.DetectedText).join(' ');
+            console.log(`[DEBUG] Text detected for ${s3Key}:`, detectedText);
 
             let validLabels = [
                 "Document", "Id Cards", "Passport", "Driving License", "Identity Document"
@@ -173,6 +181,7 @@ export class RekognitionController {
                 faceMatch,
                 documentId,
                 foundLabels: detectionResult.Labels?.map(l => l.Name),
+                extractedText: detectedText,
                 message
             };
         } catch (error) {

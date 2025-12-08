@@ -7,7 +7,9 @@ import {
     DetectLabelsCommand,
     DetectLabelsCommandOutput,
     CompareFacesCommand,
-    CompareFacesCommandOutput
+    CompareFacesCommandOutput,
+    DetectTextCommand,
+    DetectTextCommandOutput
 } from "@aws-sdk/client-rekognition";
 import { IRekognition } from "@domain/interfaces/IRekognition";
 import { Injectable } from "@nestjs/common";
@@ -81,6 +83,19 @@ export class RekognitionService implements IRekognition {
             MinConfidence: 75,
         };
         const command = new DetectLabelsCommand(params);
+        return this.client.send(command);
+    }
+
+    async detectText(bucketName: string, imageKey: string): Promise<DetectTextCommandOutput> {
+        const params = {
+            Image: {
+                S3Object: {
+                    Bucket: bucketName,
+                    Name: imageKey,
+                },
+            },
+        };
+        const command = new DetectTextCommand(params);
         return this.client.send(command);
     }
 

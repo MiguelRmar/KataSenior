@@ -38,6 +38,10 @@ export const DocumentCapture = ({ onCaptureComplete, onValidationFail, initialDo
                     const validation = await documentRepository.validateDocument(result.documentId, result.s3Key, sessionId, documentType);
 
                     if (validation.isValid) {
+                        if (validation.extractedText) {
+                            console.log("Textos extraidos:", validation.extractedText);
+                        }
+
                         // Check specifically for face match failure if it's the front ID and session ID is present
                         if (documentType === 'ID_FRONT' && sessionId && validation.faceMatch === false) {
                             setUploadStatus('⚠ Error: El rostro en el documento no coincide con la prueba de vida.');

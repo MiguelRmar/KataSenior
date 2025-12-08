@@ -8,17 +8,22 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
         this.baseUrl = baseUrl;
     }
 
-    async uploadDocument(document: DocumentCapture): Promise<{ success: boolean; documentId: string; s3Key: string }> {
+    async uploadDocument(document: DocumentCapture, fileName?: string): Promise<{ success: boolean; documentId: string; s3Key: string }> {
         try {
             const response = await fetch(`${this.baseUrl}/v1/upload-document`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'apiKey': '123456',
+                    'channel': 'web',
+                    'xname': 'kata-antigravity',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
                 body: JSON.stringify({
                     imageData: document.imageData,
                     documentType: document.documentType,
                     metadata: document.metadata,
+                    fileName: fileName,
                 }),
             });
 
@@ -26,7 +31,8 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            const responseData = await response.json();
+            const data = responseData.data;
 
             return {
                 success: true,
@@ -39,12 +45,16 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
         }
     }
 
-    async validateDocument(documentId: string, s3Key: string, sessionId?: string, documentType?: string): Promise<{ isValid: boolean; confidence: number; faceMatch?: boolean }> {
+    async validateDocument(documentId: string, s3Key: string, sessionId?: string, documentType?: string): Promise<{ isValid: boolean; confidence: number; faceMatch?: boolean; extractedText?: string }> {
         try {
             const response = await fetch(`${this.baseUrl}/v1/validate-document`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'apiKey': '123456',
+                    'channel': 'web',
+                    'xname': 'kata-antigravity',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
                 body: JSON.stringify({ documentId, s3Key, sessionId, documentType }),
             });
@@ -53,13 +63,15 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            const responseData = await response.json();
+            const data = responseData.data;
             console.log(data);
 
             return {
                 isValid: data.isValid,
                 confidence: data.confidence,
-                faceMatch: data.faceMatch
+                faceMatch: data.faceMatch,
+                extractedText: data.extractedText
             };
         } catch (error) {
             console.error('Error validating document:', error);

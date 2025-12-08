@@ -15,6 +15,10 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'apiKey': '123456',
+                    'channel': 'web',
+                    'xname': 'kata-antigravity',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
             });
 
@@ -25,7 +29,8 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            const responseData = await response.json();
+            const data = responseData.data;
 
             return {
                 sessionId: data.SessionId,
@@ -51,12 +56,17 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'apiKey': '123456',
+                    'channel': 'web',
+                    'xname': 'kata-antigravity',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
             });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const data = await response.json();
+            const responseData = await response.json();
+            const data = responseData.data;
             return {
                 accessKeyId: data.accessKeyId,
                 secretAccessKey: data.secretAccessKey,
@@ -75,13 +85,17 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'apiKey': '123456',
+                    'channel': 'web',
+                    'xname': 'kata-antigravity',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
             });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const data = await response.json();
-            return data;
+            const responseData = await response.json();
+            return responseData.data;
         } catch (error) {
             console.error('Error getting AWS credentials:', error);
             throw error;

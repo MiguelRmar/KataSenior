@@ -93,7 +93,7 @@ export const DocumentCaptureComponent = ({ onCapture, documentType }: DocumentCa
             <p className="instructions">
                 Posiciona tu {documentTypeLabels[documentType].toLowerCase()} dentro del marco verde.
                 <br />
-                El marco tiene el tamaño real de un documento. Asegúrate de que esté bien iluminado, enfocado y que todo el documento sea visible.
+                Asegúrate de que esté bien iluminado, enfocado y que todo el documento sea visible.
             </p>
 
             <div className="camera-container">
