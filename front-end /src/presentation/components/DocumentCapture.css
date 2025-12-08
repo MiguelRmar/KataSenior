@@ -101,11 +101,11 @@
 /* Marcas de agua para guiar posicionamiento */
 .photo-watermark {
     position: absolute;
-    left: 15%;
+    left: 3%;
     top: 50%;
     transform: translateY(-50%);
-    width: 25%;
-    height: 70%;
+    width: 33%;
+    height: 67%;
     border: 2px dashed rgba(255, 255, 255, 0.5);
     border-radius: 8px;
     display: flex;
@@ -130,10 +130,10 @@
 .barcode-watermark {
     position: absolute;
     left: 50%;
-    bottom: 15%;
+    bottom: 11%;
     transform: translateX(-50%);
-    width: 70%;
-    height: 25%;
+    width: 85%;
+    height: 27%;
     border: 2px dashed rgba(255, 255, 255, 0.5);
     border-radius: 4px;
     display: flex;
@@ -150,7 +150,7 @@
 }
 
 .barcode-watermark::before {
-    content: '|||||||||||';
+    content: '|||||||||||||||';
     font-size: 24px;
     letter-spacing: 2px;
     margin-bottom: 4px;

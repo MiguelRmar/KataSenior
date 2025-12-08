@@ -113,7 +113,7 @@ export const DocumentCaptureComponent = ({ onCapture, documentType }: DocumentCa
                             )}
                             {documentType === 'ID_BACK' && (
                                 <div className="barcode-watermark">
-                                    CÓDIGO DE BARRAS
+                                    CÓDIGO
                                 </div>
                             )}
                         </div>

@@ -7,7 +7,7 @@ import { AwsLiveness } from '@presentation/pages/AwsLiveness';
 const rekognitionRepository = new RekognitionHttpRepository();
 const createLivenessSessionUseCase = new CreateLivenessSessionUseCase(rekognitionRepository);
 
-export const LivenessComponent = () => {
+export const LivenessComponent = ({ onSuccess }: { onSuccess?: (confidence: number, sessionId: string) => void }) => {
     const { session, loading, error, createSession } = useLivenessSession(createLivenessSessionUseCase);
 
     const handleCreateSession = async () => {
@@ -20,7 +20,7 @@ export const LivenessComponent = () => {
 
     // Renderizar AwsLiveness cuando hay una sesión activa
     if (session) {
-        return <AwsLiveness sessionId={session.sessionId} rekognitionRepository={rekognitionRepository} />;
+        return <AwsLiveness sessionId={session.sessionId} rekognitionRepository={rekognitionRepository} onSuccess={onSuccess} />;
     }
 
     return (

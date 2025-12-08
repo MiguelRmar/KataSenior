@@ -1,7 +1,6 @@
 import type { IDocumentCaptureRepository } from '@domain/ports/out/IDocumentCaptureRepository';
 import type { DocumentCapture } from '@domain/entities/DocumentCapture';
 
-// Infrastructure adapter - HTTP implementation of Document Capture repository
 export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository {
     private readonly baseUrl: string;
 
@@ -9,7 +8,7 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
         this.baseUrl = baseUrl;
     }
 
-    async uploadDocument(document: DocumentCapture): Promise<{ success: boolean; documentId: string }> {
+    async uploadDocument(document: DocumentCapture): Promise<{ success: boolean; documentId: string; s3Key: string }> {
         try {
             const response = await fetch(`${this.baseUrl}/v1/upload-document`, {
                 method: 'POST',
@@ -32,6 +31,7 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
             return {
                 success: true,
                 documentId: data.documentId,
+                s3Key: data.s3Key
             };
         } catch (error) {
             console.error('Error uploading document:', error);
@@ -39,14 +39,14 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
         }
     }
 
-    async validateDocument(documentId: string): Promise<{ isValid: boolean; confidence: number }> {
+    async validateDocument(documentId: string, s3Key: string, sessionId?: string, documentType?: string): Promise<{ isValid: boolean; confidence: number; faceMatch?: boolean }> {
         try {
             const response = await fetch(`${this.baseUrl}/v1/validate-document`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ documentId }),
+                body: JSON.stringify({ documentId, s3Key, sessionId, documentType }),
             });
 
             if (!response.ok) {
@@ -54,10 +54,12 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
             }
 
             const data = await response.json();
+            console.log(data);
 
             return {
                 isValid: data.isValid,
                 confidence: data.confidence,
+                faceMatch: data.faceMatch
             };
         } catch (error) {
             console.error('Error validating document:', error);

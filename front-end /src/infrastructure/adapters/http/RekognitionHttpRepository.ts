@@ -2,7 +2,6 @@ import type { IRekognitionRepository } from '@domain/ports/out/IRekognitionRepos
 import type { LivenessSession } from '@domain/entities/LivenessSession';
 import type { AwsCredentials } from '@domain/entities/AwsCredentials';
 
-// Infrastructure adapter - HTTP implementation of Rekognition repository
 export class RekognitionHttpRepository implements IRekognitionRepository {
     private readonly baseUrl: string;
 
@@ -40,7 +39,6 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
     }
 
     async getLivenessSessionStatus(sessionId: string): Promise<LivenessSession> {
-        // Placeholder implementation
         return {
             sessionId,
             status: 'IN_PROGRESS',

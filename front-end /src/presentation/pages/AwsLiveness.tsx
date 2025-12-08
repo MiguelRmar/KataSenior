@@ -5,10 +5,12 @@ import type { IRekognitionRepository } from '@domain/ports/out/IRekognitionRepos
 
 export const AwsLiveness = ({
     sessionId,
-    rekognitionRepository
+    rekognitionRepository,
+    onSuccess
 }: {
     sessionId: string;
     rekognitionRepository: IRekognitionRepository;
+    onSuccess?: (confidence: number, sessionId: string) => void;
 }) => {
     const [credentialsReady, setCredentialsReady] = useState(false);
     const [credentialProvider, setCredentialProvider] = useState<AwsCredentialProvider | null>(null);
@@ -81,7 +83,9 @@ export const AwsLiveness = ({
         console.log('result... ', result);
         const confidence = result.Confidence;
         console.log('confidence... ', confidence);
-
+        if (onSuccess) {
+            onSuccess(confidence, sessionId);
+        }
     };
 
     const awsErrorResponse = async (livenessError: any) => {

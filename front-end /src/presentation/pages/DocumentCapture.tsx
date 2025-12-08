@@ -3,8 +3,15 @@ import { DocumentCaptureComponent } from '@presentation/components/DocumentCaptu
 import { DocumentCaptureHttpRepository } from '@infrastructure/adapters/http/DocumentCaptureHttpRepository';
 import type { DocumentCapture as DocumentCaptureEntity } from '@domain/entities/DocumentCapture';
 
-export const DocumentCapture = () => {
-    const [documentType, setDocumentType] = useState<'ID_FRONT' | 'ID_BACK' | 'PASSPORT' | 'DRIVER_LICENSE'>('ID_FRONT');
+interface DocumentCaptureProps {
+    onCaptureComplete?: () => void;
+    onValidationFail?: () => void;
+    initialDocumentType?: 'ID_FRONT' | 'ID_BACK' | 'PASSPORT' | 'DRIVER_LICENSE';
+    sessionId?: string;
+}
+
+export const DocumentCapture = ({ onCaptureComplete, onValidationFail, initialDocumentType = 'ID_FRONT', sessionId }: DocumentCaptureProps) => {
+    const [documentType] = useState<'ID_FRONT' | 'ID_BACK' | 'PASSPORT' | 'DRIVER_LICENSE'>(initialDocumentType);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -27,14 +34,29 @@ export const DocumentCapture = () => {
 
             if (result.success) {
                 setUploadStatus(`✓ Documento subido exitosamente. ID: ${result.documentId}`);
-
-                // Opcional: validar el documento automáticamente
                 setTimeout(async () => {
-                    const validation = await documentRepository.validateDocument(result.documentId);
+                    const validation = await documentRepository.validateDocument(result.documentId, result.s3Key, sessionId, documentType);
+
                     if (validation.isValid) {
+                        // Check specifically for face match failure if it's the front ID and session ID is present
+                        if (documentType === 'ID_FRONT' && sessionId && validation.faceMatch === false) {
+                            setUploadStatus('⚠ Error: El rostro en el documento no coincide con la prueba de vida.');
+                            setTimeout(() => {
+                                if (onValidationFail) {
+                                    onValidationFail();
+                                }
+                            }, 1500);
+                            return;
+                        }
+
                         setUploadStatus(
                             `✓ Documento validado. Confianza: ${(validation.confidence * 100).toFixed(1)}%`
                         );
+                        if (onCaptureComplete) {
+                            setTimeout(() => {
+                                onCaptureComplete();
+                            }, 1500);
+                        }
                     } else {
                         setUploadStatus('⚠ El documento no pudo ser validado. Por favor, intenta nuevamente.');
                     }
@@ -50,43 +72,15 @@ export const DocumentCapture = () => {
 
     return (
         <div style={{ padding: '20px' }}>
-            {/* Selector de tipo de documento */}
             <div style={{
-                display: 'flex',
-                gap: '10px',
-                justifyContent: 'center',
+                textAlign: 'center',
                 marginBottom: '20px',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                color: '#333'
             }}>
-                <button
-                    onClick={() => setDocumentType('ID_FRONT')}
-                    style={{
-                        padding: '10px 20px',
-                        background: documentType === 'ID_FRONT' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#e0e0e0',
-                        color: documentType === 'ID_FRONT' ? 'white' : '#333',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        transition: 'all 0.3s ease',
-                    }}
-                >
-                    Lado Frontal
-                </button>
-                <button
-                    onClick={() => setDocumentType('ID_BACK')}
-                    style={{
-                        padding: '10px 20px',
-                        background: documentType === 'ID_BACK' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#e0e0e0',
-                        color: documentType === 'ID_BACK' ? 'white' : '#333',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        transition: 'all 0.3s ease',
-                    }}
-                >
-                    Lado Trasero
-                </button>
+                {documentType === 'ID_FRONT' ? 'Lado Frontal' :
+                    documentType === 'ID_BACK' ? 'Lado Trasero' : documentType}
             </div>
 
             <DocumentCaptureComponent

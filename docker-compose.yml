@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./back-end/environments/.env
+    # No volumes or command override -> Runs production image
+
+  frontend:
+    build:
+      context: "./front-end "
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+# Reading from .env file for environment variables
