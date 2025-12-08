@@ -11,7 +11,7 @@ const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const rekognition_1 = require("./infrastructure/controllers/rekognition/rekognition");
-const recognitionService_1 = require("./application/services/recognitionService");
+const rekognitionService_1 = require("./application/services/rekognitionService");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -19,7 +19,7 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [],
         controllers: [app_controller_1.AppController, rekognition_1.RekognitionController],
-        providers: [app_service_1.AppService, recognitionService_1.RekognitionService],
+        providers: [app_service_1.AppService, rekognitionService_1.RekognitionService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -1,7 +1,42 @@
+import { useState, useEffect } from 'react';
 import type { AwsCredentialProvider } from "@aws-amplify/ui-react-liveness";
 import { FaceLivenessDetectorCore } from "@aws-amplify/ui-react-liveness";
+import type { IRekognitionRepository } from '@domain/ports/out/IRekognitionRepository';
 
-export const AwsLiveness = ({ sessionId }: { sessionId: string }) => {
+export const AwsLiveness = ({
+    sessionId,
+    rekognitionRepository
+}: {
+    sessionId: string;
+    rekognitionRepository: IRekognitionRepository;
+}) => {
+    const [credentialsReady, setCredentialsReady] = useState(false);
+    const [credentialProvider, setCredentialProvider] = useState<AwsCredentialProvider | null>(null);
+
+    useEffect(() => {
+        const fetchCredentials = async () => {
+            try {
+                const credentials = await rekognitionRepository.getAwsCredentials();
+
+                const provider: AwsCredentialProvider = async () => {
+                    return {
+                        accessKeyId: credentials.accessKeyId,
+                        secretAccessKey: credentials.secretAccessKey,
+                        sessionToken: credentials.sessionToken,
+                        expiration: credentials.expiration
+                    };
+                };
+
+                setCredentialProvider(() => provider);
+                setCredentialsReady(true);
+            } catch (error) {
+                console.error('Error fetching AWS credentials:', error);
+            }
+        };
+
+        fetchCredentials();
+    }, [rekognitionRepository]);
+
     const dictionary = {
         en: null,
         es: {
@@ -40,24 +75,28 @@ export const AwsLiveness = ({ sessionId }: { sessionId: string }) => {
 
     const language = 'es';
 
-    const credentialProvider: AwsCredentialProvider = async () => {
-        return {
-            accessKeyId: "",
-            secretAccessKey: "",
-            sessionToken: "",
-            expiration: new Date()
-        };
-    };
-
-    const awsSuccessresponse = (type: string) => {
+    const awsSuccessResponse = async (type: string) => {
         console.log('awsSuccessresponse... ', type);
+        const result = await rekognitionRepository.getSessionResult(sessionId);
+        console.log('result... ', result);
+        const confidence = result.Confidence;
+        console.log('confidence... ', confidence);
+
     };
 
-    const awsErrorresponse = (livenessError: any) => {
+    const awsErrorResponse = async (livenessError: any) => {
         console.log('Error de aws liveness... ', livenessError);
         if (livenessError.error) {
             console.log('Error de aws liveness... ', livenessError.error);
         }
+    }
+
+    if (!credentialsReady || !credentialProvider) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+                <p>Cargando credenciales AWS...</p>
+            </div>
+        );
     }
 
     return (
@@ -66,8 +105,8 @@ export const AwsLiveness = ({ sessionId }: { sessionId: string }) => {
                 <FaceLivenessDetectorCore
                     sessionId={sessionId}
                     region={'us-east-1'}
-                    onAnalysisComplete={async () => { awsSuccessresponse('success'); }}
-                    onError={async (error) => { awsErrorresponse(error); }}
+                    onAnalysisComplete={async () => { awsSuccessResponse('success'); }}
+                    onError={async (error) => { awsErrorResponse(error); }}
                     disableStartScreen={false}
                     displayText={dictionary[language]}
                     config={{ credentialProvider }}

@@ -20,12 +20,12 @@ export const LivenessComponent = () => {
 
     // Renderizar AwsLiveness cuando hay una sesión activa
     if (session) {
-        return <AwsLiveness sessionId={session.sessionId} />;
+        return <AwsLiveness sessionId={session.sessionId} rekognitionRepository={rekognitionRepository} />;
     }
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h2>AWS Rekognition Liveness</h2>
+            <h2>Prueba de autenticidad</h2>
 
             <button
                 onClick={handleCreateSession}
@@ -40,7 +40,7 @@ export const LivenessComponent = () => {
                     cursor: loading ? 'not-allowed' : 'pointer',
                 }}
             >
-                {loading ? 'Creating Session...' : 'Create Liveness Session'}
+                {loading ? 'Iniciando...' : 'Inicia la prueba de autenticidad'}
             </button>
 
             {error && (
