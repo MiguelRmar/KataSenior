@@ -36,4 +36,57 @@ export class S3Service implements IS3 {
 
         return `https://s3.amazonaws.com/${bucketName}/${key}`;
     }
+
+    async uploadDocument(body: any) {
+        try {
+            const { imageData, documentType, fileName } = body;
+
+            if (!imageData) {
+                return {
+                    success: false,
+                    error: 'No image data provided'
+                };
+            }
+
+            const matches = imageData.match(/^data:(.+);base64,(.+)$/);
+            let fileBuffer: Buffer;
+            let contentType = 'image/jpeg';
+
+            if (matches) {
+                contentType = matches[1];
+                fileBuffer = Buffer.from(matches[2], 'base64');
+            } else {
+                fileBuffer = Buffer.from(imageData, 'base64');
+            }
+
+            const documentId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const extension = contentType.split('/')[1] || 'jpg';
+            const s3Key = fileName
+                ? `documents/${fileName}.${extension}`
+                : `documents/${documentId}.${extension}`;
+            const bucketName = this.configService.get<string>('AWS_BUCKET_S3', 'authenticator-bucket');
+
+            const fileUrl = await this.uploadFile(
+                bucketName,
+                s3Key,
+                fileBuffer,
+                contentType
+            );
+
+            return {
+                success: true,
+                documentId,
+                documentType,
+                fileUrl,
+                s3Key,
+                message: 'Document uploaded successfully'
+            };
+        } catch (error) {
+            console.error('Error uploading document:', error);
+            return {
+                success: false,
+                error: 'Failed to upload document'
+            };
+        }
+    }
 }

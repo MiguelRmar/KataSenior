@@ -14,118 +14,35 @@ import {
 import { IRekognition } from "@domain/interfaces/IRekognition";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { Rekognition } from "@clients/rekognition/rekognition";
+import { S3Service } from "@services/s3Service";
 
 @Injectable()
 export class RekognitionService implements IRekognition {
-    private client: RekognitionClient;
-    private accessKeyId: string | undefined;
-    private secretAccessKey: string | undefined;
 
-    constructor(private configService: ConfigService) {
-        this.accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
-        this.secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
-        const region = this.configService.get<string>('AWS_REGION', 'us-east-1');
-
-        if (!this.accessKeyId || !this.secretAccessKey) {
-            throw new Error('AWS credentials are not configured. Please check your .env file.');
-        }
-
-        this.client = new RekognitionClient({
-            region,
-            credentials: {
-                accessKeyId: this.accessKeyId,
-                secretAccessKey: this.secretAccessKey
-            }
-        });
+    constructor(private clientRekognition: Rekognition, private s3Service: S3Service, private configService: ConfigService) {
     }
 
     async getAwsCredentials(): Promise<any> {
-        return {
-            accessKeyId: this.accessKeyId,
-            secretAccessKey: this.secretAccessKey,
-            sessionToken: "",
-            expiration: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        };
+        return this.clientRekognition.getAwsCredentials();
     }
 
     getSessionResult(sessionId: string): Promise<GetFaceLivenessSessionResultsCommandOutput> {
-        const params = {
-            SessionId: sessionId,
-        };
-        const command = new GetFaceLivenessSessionResultsCommand(params);
-        return this.client.send(command);
+        return this.clientRekognition.getSessionResult(sessionId);
     }
 
     createLivenessSession(): Promise<CreateFaceLivenessSessionCommandOutput> {
-        const params = {
-            Settings: {
-                OutputConfig: {
-                    S3Bucket: this.configService.get<string>('AWS_BUCKET_S3', 'authenticator-bucket'),
-                    S3KeyPrefix: 'liveness-sessions/',
-                },
-                AuditImagesLimit: 4,
-            },
-            ClientRequestToken: 'unique-app-token-' + Date.now(),
-        };
-
-        const command = new CreateFaceLivenessSessionCommand(params);
-        return this.client.send(command);
+        return this.clientRekognition.createLivenessSession();
     }
     async detectLabels(bucketName: string, imageKey: string): Promise<DetectLabelsCommandOutput> {
-        const params = {
-            Image: {
-                S3Object: {
-                    Bucket: bucketName,
-                    Name: imageKey,
-                },
-            },
-            MaxLabels: 10,
-            MinConfidence: 75,
-        };
-        const command = new DetectLabelsCommand(params);
-        return this.client.send(command);
+        return this.clientRekognition.detectLabels(bucketName, imageKey);
     }
 
     async detectText(bucketName: string, imageKey: string): Promise<DetectTextCommandOutput> {
-        const params = {
-            Image: {
-                S3Object: {
-                    Bucket: bucketName,
-                    Name: imageKey,
-                },
-            },
-        };
-        const command = new DetectTextCommand(params);
-        return this.client.send(command);
+        return this.clientRekognition.detectText(bucketName, imageKey);
     }
 
     async compareFaces(sourceBucket: string, sourceKey: string, targetBucket: string, targetKey: string): Promise<CompareFacesCommandOutput> {
-        console.log(`[DEBUG] CompareFaces (Region: ${this.client.config.region() || 'unknown'})`);
-        console.log(`[DEBUG] Comparing Source: Bucket=${sourceBucket}, Key=${sourceKey}`);
-        console.log(`[DEBUG] Comparing Target: Bucket=${targetBucket}, Key=${targetKey}`);
-
-        if (!sourceBucket || !sourceKey || !targetBucket || !targetKey) {
-            console.error('[ERROR] Missing parameters for CompareFaces');
-            throw new Error('Missing parameters for CompareFaces');
-        }
-
-        const params = {
-            SourceImage: {
-                S3Object: {
-                    Bucket: sourceBucket,
-                    Name: decodeURIComponent(sourceKey),
-                },
-            },
-            TargetImage: {
-                S3Object: {
-                    Bucket: targetBucket,
-                    Name: decodeURIComponent(targetKey),
-                },
-            },
-            // SimilarityThreshold: 80, // Optional, defaults to 80 usually. Removing to reduce error surface.
-        };
-        console.log('[DEBUG] CompareFaces Params:', JSON.stringify(params, null, 2));
-        const command = new CompareFacesCommand(params);
-        return this.client.send(command);
+        return this.clientRekognition.compareFaces(sourceBucket, sourceKey, targetBucket, targetKey);
     }
 }

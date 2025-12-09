@@ -1,11 +1,15 @@
 import type { IDocumentCaptureRepository } from '@domain/ports/out/IDocumentCaptureRepository';
 import type { DocumentCapture } from '@domain/entities/DocumentCapture';
 
+import { EncryptionService } from '../../services/EncryptionService';
+
 export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository {
     private readonly baseUrl: string;
+    private readonly encryptionService: EncryptionService;
 
     constructor(baseUrl: string = 'http://localhost:3000') {
         this.baseUrl = baseUrl;
+        this.encryptionService = new EncryptionService();
     }
 
     async uploadDocument(document: DocumentCapture, fileName?: string): Promise<{ success: boolean; documentId: string; s3Key: string }> {
@@ -32,7 +36,11 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
             }
 
             const responseData = await response.json();
-            const data = responseData.data;
+            const decryptedData = typeof responseData.data === 'string'
+                ? this.encryptionService.decrypt(responseData.data)
+                : responseData.data;
+
+            const data = decryptedData;
 
             return {
                 success: true,
@@ -64,7 +72,10 @@ export class DocumentCaptureHttpRepository implements IDocumentCaptureRepository
             }
 
             const responseData = await response.json();
-            const data = responseData.data;
+            const decryptedData = typeof responseData.data === 'string'
+                ? this.encryptionService.decrypt(responseData.data)
+                : responseData.data;
+            const data = decryptedData;
             console.log(data);
 
             return {

@@ -1,5 +1,5 @@
 
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -13,6 +13,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
         console.log(`[JwtAuthGuard] ${request.method} ${request.url}`);
+        const authHeader = request.headers['authorization'];
+        console.log(`[JwtAuthGuard] Authorization Header: ${authHeader ? 'Present' : 'Missing'} (${authHeader?.substring(0, 15)}...)`);
 
         if (request.method === 'OPTIONS') {
             console.log('[JwtAuthGuard] Allowing OPTIONS');

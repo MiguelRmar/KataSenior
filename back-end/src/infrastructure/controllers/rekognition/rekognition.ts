@@ -32,58 +32,7 @@ export class RekognitionController {
     @Version("1")
     @Post("upload-document")
     async uploadDocument(@Body() body: any) {
-        try {
-            const { imageData, documentType, fileName } = body;
-
-            if (!imageData) {
-                return {
-                    success: false,
-                    error: 'No image data provided'
-                };
-            }
-
-            // Extract content type and buffer from base64 string
-            const matches = imageData.match(/^data:(.+);base64,(.+)$/);
-            let fileBuffer: Buffer;
-            let contentType = 'image/jpeg'; // Default
-
-            if (matches) {
-                contentType = matches[1];
-                fileBuffer = Buffer.from(matches[2], 'base64');
-            } else {
-                // Assume raw base64 without prefix
-                fileBuffer = Buffer.from(imageData, 'base64');
-            }
-
-            const documentId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            const extension = contentType.split('/')[1] || 'jpg';
-            const s3Key = fileName
-                ? `documents/${fileName}.${extension}`
-                : `documents/${documentId}.${extension}`;
-            const bucketName = this.configService.get<string>('AWS_BUCKET_S3', 'authenticator-bucket');
-
-            const fileUrl = await this.s3Service.uploadFile(
-                bucketName,
-                s3Key,
-                fileBuffer,
-                contentType
-            );
-
-            return {
-                success: true,
-                documentId,
-                documentType,
-                fileUrl,
-                s3Key,
-                message: 'Document uploaded successfully'
-            };
-        } catch (error) {
-            console.error('Error uploading document:', error);
-            return {
-                success: false,
-                error: 'Failed to upload document'
-            };
-        }
+        return this.s3Service.uploadDocument(body);
     }
 
     @Version("1")
@@ -99,12 +48,9 @@ export class RekognitionController {
             }
             const bucketName = this.configService.get<string>('AWS_BUCKET_S3', 'authenticator-bucket');
 
-            // 1. Validate Document Content (Labels)
             const detectionResult = await this.rekognitionService.detectLabels(bucketName, s3Key);
 
             console.log(`[DEBUG] Labels detected for ${s3Key} (Type: ${documentType}):`, JSON.stringify(detectionResult.Labels, null, 2));
-
-            // 2. Detect Text
             const textDetectionResult = await this.rekognitionService.detectText(bucketName, s3Key);
             const detectedText = textDetectionResult.TextDetections?.filter(t => t.Type === 'LINE').map(t => t.DetectedText).join(' ');
             console.log(`[DEBUG] Text detected for ${s3Key}:`, detectedText);
@@ -126,7 +72,6 @@ export class RekognitionController {
             let faceMatch = false;
             let similarity = 0;
 
-            // 2. Compare Face (if sessionId provided)
             if (isValid && sessionId) {
                 try {
                     const sessionResult = await this.rekognitionService.getSessionResult(sessionId);
@@ -149,28 +94,24 @@ export class RekognitionController {
                             s3Key
                         );
 
-                        // Check similarity of the best match
+
                         if (comparisonResult.FaceMatches && comparisonResult.FaceMatches.length > 0) {
-                            const match = comparisonResult.FaceMatches[0]; // Best match
+                            const match = comparisonResult.FaceMatches[0];
                             similarity = match.Similarity || 0;
                             if (similarity > 80) {
                                 faceMatch = true;
                                 message += ' and Face Verified';
                             } else {
                                 message += ' but Face Mismatch';
-                                // isValid remains true because the document itself is valid
                             }
                         } else {
                             message += ' but No Face Match found';
-                            // isValid remains true because the document itself is valid
                         }
                     } else {
                         console.warn('No ReferenceImage found in Liveness Session');
                     }
                 } catch (compError) {
                     console.error('Error comparing faces:', compError);
-                    // Proceed without failing everything? or fail?
-                    // Let's log and keep isValid as is, but maybe add warning.
                 }
             }
 

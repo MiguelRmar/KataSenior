@@ -20,6 +20,8 @@ const response_interceptor_1 = require("./infrastructure/interceptors/response.i
 const http_exception_filter_1 = require("./infrastructure/filters/http-exception.filter");
 const auth_module_1 = require("./infrastructure/modules/auth.module");
 const jwt_auth_guard_1 = require("./infrastructure/guards/jwt-auth.guard");
+const encryption_service_1 = require("./infrastructure/services/encryption.service");
+const rekognition_2 = require("./infrastructure/clients/rekognition/rekognition");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,6 +39,8 @@ exports.AppModule = AppModule = __decorate([
             app_service_1.AppService,
             rekognitionService_1.RekognitionService,
             s3Service_1.S3Service,
+            encryption_service_1.EncryptionService,
+            rekognition_2.Rekognition,
             {
                 provide: core_1.APP_GUARD,
                 useClass: headers_guard_1.HeadersGuard,

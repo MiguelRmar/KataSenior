@@ -2,15 +2,21 @@ import type { IRekognitionRepository } from '@domain/ports/out/IRekognitionRepos
 import type { LivenessSession } from '@domain/entities/LivenessSession';
 import type { AwsCredentials } from '@domain/entities/AwsCredentials';
 
+import { EncryptionService } from '../../services/EncryptionService';
+
 export class RekognitionHttpRepository implements IRekognitionRepository {
     private readonly baseUrl: string;
+    private readonly encryptionService: EncryptionService;
 
     constructor(baseUrl: string = 'http://localhost:3000') {
         this.baseUrl = baseUrl;
+        this.encryptionService = new EncryptionService();
     }
 
     async createLivenessSession(): Promise<LivenessSession> {
         try {
+            const token = localStorage.getItem('token');
+            console.log('[Frontend] RekognitionHttpRepository.createLivenessSession token:', token ? `Bearer ${token.substring(0, 10)}...` : 'No token found');
             const response = await fetch(`${this.baseUrl}/v1/create-liveness-session`, {
                 method: 'POST',
                 headers: {
@@ -30,7 +36,11 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
             }
 
             const responseData = await response.json();
-            const data = responseData.data;
+            const decryptedData = typeof responseData.data === 'string'
+                ? this.encryptionService.decrypt(responseData.data)
+                : responseData.data;
+
+            const data = decryptedData;
 
             return {
                 sessionId: data.SessionId,
@@ -66,7 +76,13 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const responseData = await response.json();
-            const data = responseData.data;
+
+            const decryptedData = typeof responseData.data === 'string'
+                ? this.encryptionService.decrypt(responseData.data)
+                : responseData.data;
+
+            const data = decryptedData;
+
             return {
                 accessKeyId: data.accessKeyId,
                 secretAccessKey: data.secretAccessKey,
@@ -95,7 +111,11 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const responseData = await response.json();
-            return responseData.data;
+            const decryptedData = typeof responseData.data === 'string'
+                ? this.encryptionService.decrypt(responseData.data)
+                : responseData.data;
+
+            return decryptedData;
         } catch (error) {
             console.error('Error getting AWS credentials:', error);
             throw error;

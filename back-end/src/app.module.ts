@@ -11,7 +11,8 @@ import { ResponseInterceptor } from './infrastructure/interceptors/response.inte
 import { AllExceptionsFilter } from './infrastructure/filters/http-exception.filter';
 import { AuthModule } from './infrastructure/modules/auth.module';
 import { JwtAuthGuard } from './infrastructure/guards/jwt-auth.guard';
-
+import { EncryptionService } from './infrastructure/services/encryption.service';
+import { Rekognition } from '@clients/rekognition/rekognition';
 
 @Module({
   imports: [
@@ -26,6 +27,8 @@ import { JwtAuthGuard } from './infrastructure/guards/jwt-auth.guard';
     AppService,
     RekognitionService,
     S3Service,
+    EncryptionService,
+    Rekognition,
     {
       provide: APP_GUARD,
       useClass: HeadersGuard,

@@ -23,7 +23,7 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@clients/*": [
-        "src/infrastructure/client/*"
+        "src/infrastructure/clients/*"
       ],
       "@services/*": [
         "src/application/services/*"
@@ -33,7 +33,7 @@
       ],
       "@controllers/*": [
         "src/infrastructure/controllers/*"
-      ]
+      ],
     }
   }
 }
