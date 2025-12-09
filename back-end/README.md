@@ -25,6 +25,36 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Architecture
+
+This project follows the **Hexagonal Architecture** (Ports and Adapters) pattern to ensure separation of concerns and maintainability.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│   Infrastructure                                                                 │
+│   @src/infrastructure/                                                           │
+│   Components: [ RekognitionController ]  [ RekognitionClient ]  [ S3Service ]    │
+│                                                                                  │
+│   ┌──────────────────────────────────────────────────────────────────────────┐   │
+│   │                                                                          │   │
+│   │   Application                                                            │   │
+│   │   @src/application/                                                      │   │
+│   │   Components: [ RekognitionService ]                                     │   │
+│   │                                                                          │   │
+│   │   ┌──────────────────────────────────────────────────────────────────┐   │   │
+│   │   │                                                                  │   │   │
+│   │   │   Domain                                                         │   │   │
+│   │   │   @src/domain/                                                   │   │   │
+│   │   │   Components: [ IRekognition ]                                   │   │   │
+│   │   │                                                                  │   │   │
+│   │   └──────────────────────────────────────────────────────────────────┘   │   │
+│   │                                                                          │   │
+│   └──────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
 ## Project setup
 
 ```bash

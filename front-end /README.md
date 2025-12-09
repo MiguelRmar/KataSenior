@@ -4,6 +4,38 @@ This template provides a minimal setup to get React working in Vite with HMR and
 
 Currently, two official plugins are available:
 
+## Architecture
+
+This project follows the **Hexagonal Architecture** (Ports and Adapters) pattern to ensure separation of concerns and maintainability.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│   Infrastructure                                                                 │
+│   @src/infrastructure/                                                           │
+│   Components: [ App.tsx ]  [ RekognitionHttpRepository ]  [ AuthHttpRepository ] │
+│                                                                                  │
+│   ┌──────────────────────────────────────────────────────────────────────────┐   │
+│   │                                                                          │   │
+│   │   Application                                                            │   │
+│   │   @src/application/                                                      │   │
+│   │   Components: [ CreateLivenessSessionUseCase ]                           │   │
+│   │                                                                          │   │
+│   │   ┌──────────────────────────────────────────────────────────────────┐   │   │
+│   │   │                                                                  │   │   │
+│   │   │   Domain                                                         │   │   │
+│   │   │   @src/domain/                                                   │   │   │
+│   │   │   Components: [ IAuthRepository ]  [ IRekognitionRepository ]    │   │   │
+│   │   │                                                                  │   │   │
+│   │   └──────────────────────────────────────────────────────────────────┘   │   │
+│   │                                                                          │   │
+│   └──────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Available Scripts:
+
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
