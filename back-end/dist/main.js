@@ -47,6 +47,7 @@ const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const bodyParser = __importStar(require("body-parser"));
+const logging_interceptor_1 = require("./infrastructure/interceptors/logging.interceptor");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableVersioning({
@@ -62,10 +63,11 @@ async function bootstrap() {
     swagger_1.SwaggerModule.setup('api/docs', app, document);
     app.use(bodyParser.json({ limit: '50mb' }));
     app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+    app.useGlobalInterceptors(new logging_interceptor_1.LoggingInterceptor());
     app.enableCors({
-        origin: ['http://localhost:5173', 'http://localhost:5174'],
+        origin: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-        allowedHeaders: 'Content-Type, Accept, Authorization, apiKey, channel, xname',
+        allowedHeaders: 'Content-Type, Accept, Authorization, apiKey, channel, xname, uuid, document-number',
         credentials: true,
     });
     await app.listen(process.env.PORT ?? 3000);

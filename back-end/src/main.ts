@@ -11,6 +11,7 @@ import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
+import { LoggingInterceptor } from './infrastructure/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -33,11 +34,13 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '50mb' }));
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
   // Enable CORS
   app.enableCors({
     origin: true, // Allow all origins by reflecting the request origin
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Authorization, apiKey, channel, xname',
+    allowedHeaders: 'Content-Type, Accept, Authorization, apiKey, channel, xname, uuid, document-number',
     credentials: true,
   });
 

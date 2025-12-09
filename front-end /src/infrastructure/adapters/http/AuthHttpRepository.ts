@@ -10,6 +10,13 @@ export class AuthHttpRepository {
         this.encryptionService = new EncryptionService();
     }
 
+    private generateUUID(): string {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     async login(username: string, password: string): Promise<{ success: boolean; token?: string; error?: string }> {
         try {
             const response = await fetch(`${this.baseUrl}/auth/login`, {
@@ -19,6 +26,8 @@ export class AuthHttpRepository {
                     'apiKey': '123456',
                     'channel': 'web',
                     'xname': 'kata-antigravity',
+                    'uuid': this.generateUUID(),
+                    'document-number': '123456789', // Default or passed as argument
                 },
                 body: JSON.stringify({ username, password }),
             });

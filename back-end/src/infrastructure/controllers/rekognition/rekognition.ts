@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Body, Version } from "@nestjs/common";
+import { Controller, Get, Post, Query, Body, Version, Headers } from "@nestjs/common";
 import { RekognitionService } from "@services/rekognitionService";
 import { S3Service } from "@services/s3Service";
 import { ConfigService } from "@nestjs/config";
@@ -35,8 +35,12 @@ export class RekognitionController {
             ],
         },
     })
-    async createLivenessSession() {
-        return this.rekognitionService.createLivenessSession();
+    async createLivenessSession(@Headers() headers: any) {
+        const context = {
+            uuid: headers['uuid'],
+            documentNumber: headers['document-number']
+        };
+        return this.rekognitionService.createLivenessSession(context);
     }
 
     @Version("1")
@@ -57,15 +61,23 @@ export class RekognitionController {
             ],
         },
     })
-    async getAwsCredentials() {
-        return this.rekognitionService.getAwsCredentials();
+    async getAwsCredentials(@Headers() headers: any) {
+        const context = {
+            uuid: headers['uuid'],
+            documentNumber: headers['document-number']
+        };
+        return this.rekognitionService.getAwsCredentials(context);
     }
 
     @Version("1")
     @Get("result-session")
     @ApiOperation({ summary: 'Get results of a Face Liveness session' })
-    async getSessionResult(@Query('sessionId') sessionId: string) {
-        return this.rekognitionService.getSessionResult(sessionId);
+    async getSessionResult(@Query('sessionId') sessionId: string, @Headers() headers: any) {
+        const context = {
+            uuid: headers['uuid'],
+            documentNumber: headers['document-number']
+        };
+        return this.rekognitionService.getSessionResult(sessionId, context);
     }
 
     @Version("1")
@@ -112,8 +124,14 @@ export class RekognitionController {
         },
     })
     @ApiBody({ type: ValidateDocumentDto })
-    async validateDocument(@Body() body: ValidateDocumentDto) {
+    async validateDocument(@Body() body: ValidateDocumentDto, @Headers() headers: any) {
         try {
+            const uuid = headers['uuid'] || 'No-UUID';
+            const documentNumber = headers['document-number'] || 'No-DocNum';
+            const logPrefix = `[RekognitionController] [${uuid}] [${documentNumber}]`;
+
+            const context = { uuid, documentNumber };
+
             const { documentId, s3Key, documentType, sessionId } = body;
             if (!s3Key) {
                 return {
@@ -123,12 +141,12 @@ export class RekognitionController {
             }
             const bucketName = this.configService.get<string>('AWS_BUCKET_S3', 'authenticator-bucket');
 
-            const detectionResult = await this.rekognitionService.detectLabels(bucketName, s3Key);
+            const detectionResult = await this.rekognitionService.detectLabels(bucketName, s3Key, context);
 
-            console.log(`[DEBUG] Labels detected for ${s3Key} (Type: ${documentType}):`, JSON.stringify(detectionResult.Labels, null, 2));
-            const textDetectionResult = await this.rekognitionService.detectText(bucketName, s3Key);
+            console.log(`${logPrefix} [DEBUG] Labels detected for ${s3Key} (Type: ${documentType}):`, JSON.stringify(detectionResult.Labels, null, 2));
+            const textDetectionResult = await this.rekognitionService.detectText(bucketName, s3Key, context);
             const detectedText = textDetectionResult.TextDetections?.filter(t => t.Type === 'LINE').map(t => t.DetectedText).join(' ');
-            console.log(`[DEBUG] Text detected for ${s3Key}:`, detectedText);
+            console.log(`${logPrefix} [DEBUG] Text detected for ${s3Key}:`, detectedText);
 
             let validLabels = [
                 "Document", "Id Cards", "Passport", "Driving License", "Identity Document"
@@ -149,9 +167,9 @@ export class RekognitionController {
 
             if (isValid && sessionId) {
                 try {
-                    const sessionResult = await this.rekognitionService.getSessionResult(sessionId);
+                    const sessionResult = await this.rekognitionService.getSessionResult(sessionId, context);
 
-                    console.log('[DEBUG] Session Result:', JSON.stringify(sessionResult, null, 2));
+                    console.log(`${logPrefix} [DEBUG] Session Result:`, JSON.stringify(sessionResult, null, 2));
 
                     if (sessionResult.ReferenceImage &&
                         sessionResult.ReferenceImage.S3Object &&
@@ -160,13 +178,14 @@ export class RekognitionController {
                         const sourceBucket = sessionResult.ReferenceImage.S3Object.Bucket;
                         const sourceKey = sessionResult.ReferenceImage.S3Object.Name;
 
-                        console.log(`[DEBUG] Comparing Source (${sourceBucket}/${sourceKey}) with Target (${bucketName}/${s3Key})`);
+                        console.log(`${logPrefix} [DEBUG] Comparing Source (${sourceBucket}/${sourceKey}) with Target (${bucketName}/${s3Key})`);
 
                         const comparisonResult = await this.rekognitionService.compareFaces(
                             sourceBucket,
                             sourceKey,
                             bucketName,
-                            s3Key
+                            s3Key,
+                            context
                         );
 
 
@@ -183,10 +202,10 @@ export class RekognitionController {
                             message += ' but No Face Match found';
                         }
                     } else {
-                        console.warn('No ReferenceImage found in Liveness Session');
+                        console.warn(`${logPrefix} No ReferenceImage found in Liveness Session`);
                     }
                 } catch (compError) {
-                    console.error('Error comparing faces:', compError);
+                    console.error(`${logPrefix} Error comparing faces:`, compError);
                 }
             }
 
@@ -201,7 +220,7 @@ export class RekognitionController {
                 message
             };
         } catch (error) {
-            console.error('Error validating document:', error);
+            console.error(`[RekognitionController] [${headers['uuid'] || 'No-UUID'}] [${headers['document-number'] || 'No-DocNum'}] Error validating document:`, error);
             return {
                 isValid: false,
                 error: 'Failed to validate document'

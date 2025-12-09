@@ -24,6 +24,8 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                     'apiKey': '123456',
                     'channel': 'web',
                     'xname': 'kata-antigravity',
+                    'uuid': crypto.randomUUID ? crypto.randomUUID() : '12345678-1234-1234-1234-123456789012',
+                    'document-number': '123456789',
                     'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
             });
@@ -69,6 +71,8 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                     'apiKey': '123456',
                     'channel': 'web',
                     'xname': 'kata-antigravity',
+                    'uuid': crypto.randomUUID ? crypto.randomUUID() : '12345678-1234-1234-1234-123456789012',
+                    'document-number': '123456789',
                     'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
             });
@@ -104,6 +108,8 @@ export class RekognitionHttpRepository implements IRekognitionRepository {
                     'apiKey': '123456',
                     'channel': 'web',
                     'xname': 'kata-antigravity',
+                    'uuid': crypto.randomUUID ? crypto.randomUUID() : '12345678-1234-1234-1234-123456789012',
+                    'document-number': '123456789',
                     'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
                 },
             });

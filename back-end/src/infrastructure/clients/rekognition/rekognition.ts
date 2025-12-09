@@ -39,7 +39,7 @@ export class Rekognition implements IRekognition {
         });
     }
 
-    async getAwsCredentials(): Promise<any> {
+    async getAwsCredentials(context?: { uuid?: string; documentNumber?: string }): Promise<any> {
         return {
             accessKeyId: this.accessKeyId,
             secretAccessKey: this.secretAccessKey,
@@ -48,7 +48,7 @@ export class Rekognition implements IRekognition {
         };
     }
 
-    getSessionResult(sessionId: string): Promise<GetFaceLivenessSessionResultsCommandOutput> {
+    getSessionResult(sessionId: string, context?: { uuid?: string; documentNumber?: string }): Promise<GetFaceLivenessSessionResultsCommandOutput> {
         const params = {
             SessionId: sessionId,
         };
@@ -56,7 +56,7 @@ export class Rekognition implements IRekognition {
         return this.client.send(command);
     }
 
-    createLivenessSession(): Promise<CreateFaceLivenessSessionCommandOutput> {
+    createLivenessSession(context?: { uuid?: string; documentNumber?: string }): Promise<CreateFaceLivenessSessionCommandOutput> {
         const params = {
             Settings: {
                 OutputConfig: {
@@ -71,7 +71,7 @@ export class Rekognition implements IRekognition {
         const command = new CreateFaceLivenessSessionCommand(params);
         return this.client.send(command);
     }
-    async detectLabels(bucketName: string, imageKey: string): Promise<DetectLabelsCommandOutput> {
+    async detectLabels(bucketName: string, imageKey: string, context?: { uuid?: string; documentNumber?: string }): Promise<DetectLabelsCommandOutput> {
         const params = {
             Image: {
                 S3Object: {
@@ -86,7 +86,7 @@ export class Rekognition implements IRekognition {
         return this.client.send(command);
     }
 
-    async detectText(bucketName: string, imageKey: string): Promise<DetectTextCommandOutput> {
+    async detectText(bucketName: string, imageKey: string, context?: { uuid?: string; documentNumber?: string }): Promise<DetectTextCommandOutput> {
         const params = {
             Image: {
                 S3Object: {
@@ -99,13 +99,17 @@ export class Rekognition implements IRekognition {
         return this.client.send(command);
     }
 
-    async compareFaces(sourceBucket: string, sourceKey: string, targetBucket: string, targetKey: string): Promise<CompareFacesCommandOutput> {
-        console.log(`[DEBUG] CompareFaces (Region: ${this.client.config.region() || 'unknown'})`);
-        console.log(`[DEBUG] Comparing Source: Bucket=${sourceBucket}, Key=${sourceKey}`);
-        console.log(`[DEBUG] Comparing Target: Bucket=${targetBucket}, Key=${targetKey}`);
+    async compareFaces(sourceBucket: string, sourceKey: string, targetBucket: string, targetKey: string, context?: { uuid?: string; documentNumber?: string }): Promise<CompareFacesCommandOutput> {
+        const uuid = context?.uuid || 'No-UUID';
+        const documentNumber = context?.documentNumber || 'No-DocNum';
+        const logPrefix = `[RekognitionClient] [${uuid}] [${documentNumber}]`;
+
+        console.log(`${logPrefix} [DEBUG] CompareFaces (Region: ${this.client.config.region() || 'unknown'})`);
+        console.log(`${logPrefix} [DEBUG] Comparing Source: Bucket=${sourceBucket}, Key=${sourceKey}`);
+        console.log(`${logPrefix} [DEBUG] Comparing Target: Bucket=${targetBucket}, Key=${targetKey}`);
 
         if (!sourceBucket || !sourceKey || !targetBucket || !targetKey) {
-            console.error('[ERROR] Missing parameters for CompareFaces');
+            console.error(`${logPrefix} [ERROR] Missing parameters for CompareFaces`);
             throw new Error('Missing parameters for CompareFaces');
         }
 
@@ -123,7 +127,7 @@ export class Rekognition implements IRekognition {
                 },
             }
         };
-        console.log('[DEBUG] CompareFaces Params:', JSON.stringify(params, null, 2));
+        console.log(`${logPrefix} [DEBUG] CompareFaces Params:`, JSON.stringify(params, null, 2));
         const command = new CompareFacesCommand(params);
         return this.client.send(command);
     }

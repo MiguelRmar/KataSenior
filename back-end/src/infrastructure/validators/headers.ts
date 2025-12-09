@@ -10,4 +10,10 @@ export class HeadersValidator {
     @IsString()
     @IsNotEmpty()
     xname: string;
+    @IsString()
+    @IsNotEmpty()
+    uuid: string;
+    @IsString()
+    @IsNotEmpty()
+    documentNumber: string;
 }

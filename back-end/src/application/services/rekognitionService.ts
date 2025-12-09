@@ -11,7 +11,7 @@ import {
     DetectTextCommand,
     DetectTextCommandOutput
 } from "@aws-sdk/client-rekognition";
-import { IRekognition } from "@domain/interfaces/IRekognition";
+import { IRekognition, IContext } from "@domain/interfaces/IRekognition";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Rekognition } from "@clients/rekognition/rekognition";
@@ -23,26 +23,26 @@ export class RekognitionService implements IRekognition {
     constructor(private clientRekognition: Rekognition, private s3Service: S3Service, private configService: ConfigService) {
     }
 
-    async getAwsCredentials(): Promise<any> {
-        return this.clientRekognition.getAwsCredentials();
+    async getAwsCredentials(context?: IContext): Promise<any> {
+        return this.clientRekognition.getAwsCredentials(context);
     }
 
-    getSessionResult(sessionId: string): Promise<GetFaceLivenessSessionResultsCommandOutput> {
-        return this.clientRekognition.getSessionResult(sessionId);
+    getSessionResult(sessionId: string, context?: IContext): Promise<GetFaceLivenessSessionResultsCommandOutput> {
+        return this.clientRekognition.getSessionResult(sessionId, context);
     }
 
-    createLivenessSession(): Promise<CreateFaceLivenessSessionCommandOutput> {
-        return this.clientRekognition.createLivenessSession();
+    createLivenessSession(context?: IContext): Promise<CreateFaceLivenessSessionCommandOutput> {
+        return this.clientRekognition.createLivenessSession(context);
     }
-    async detectLabels(bucketName: string, imageKey: string): Promise<DetectLabelsCommandOutput> {
-        return this.clientRekognition.detectLabels(bucketName, imageKey);
-    }
-
-    async detectText(bucketName: string, imageKey: string): Promise<DetectTextCommandOutput> {
-        return this.clientRekognition.detectText(bucketName, imageKey);
+    async detectLabels(bucketName: string, imageKey: string, context?: IContext): Promise<DetectLabelsCommandOutput> {
+        return this.clientRekognition.detectLabels(bucketName, imageKey, context);
     }
 
-    async compareFaces(sourceBucket: string, sourceKey: string, targetBucket: string, targetKey: string): Promise<CompareFacesCommandOutput> {
-        return this.clientRekognition.compareFaces(sourceBucket, sourceKey, targetBucket, targetKey);
+    async detectText(bucketName: string, imageKey: string, context?: IContext): Promise<DetectTextCommandOutput> {
+        return this.clientRekognition.detectText(bucketName, imageKey, context);
+    }
+
+    async compareFaces(sourceBucket: string, sourceKey: string, targetBucket: string, targetKey: string, context?: IContext): Promise<CompareFacesCommandOutput> {
+        return this.clientRekognition.compareFaces(sourceBucket, sourceKey, targetBucket, targetKey, context);
     }
 }

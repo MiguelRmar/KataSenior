@@ -13,6 +13,8 @@ export class HeadersGuard implements CanActivate {
             apiKey: headers['apikey'] || headers['apiKey'],
             channel: headers['channel'],
             xname: headers['xname'],
+            uuid: headers['uuid'],
+            documentNumber: headers['document-number'],
         });
 
         const errors = await validate(headersDto);
