@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
@@ -10,6 +11,15 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+
+  const config = new DocumentBuilder()
+    .setTitle('KATA Senior API')
+    .setDescription('The KATA Senior API description')
+    .setVersion('1.0')
+    .addTag('Rekognition')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
 
   // Increase payload size limit for base64 images (50MB)
   app.use(bodyParser.json({ limit: '50mb' }));

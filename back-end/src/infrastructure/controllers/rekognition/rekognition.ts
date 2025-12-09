@@ -2,7 +2,13 @@ import { Controller, Get, Post, Query, Body, Version } from "@nestjs/common";
 import { RekognitionService } from "@services/rekognitionService";
 import { S3Service } from "@services/s3Service";
 import { ConfigService } from "@nestjs/config";
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
+import { UploadDocumentDto, ValidateDocumentDto } from "src/application/dtos/rekognition.dto";
+import { CreateLivenessSessionResponse, AwsCredentialsResponse, UploadDocumentResponse, ValidateDocumentResponse } from "src/application/dtos/rekognition.response.dto";
+import { ApiResponse as StandardApiResponse } from "src/application/dtos/api-response.dto";
 
+@ApiTags('Rekognition')
+@ApiExtraModels(StandardApiResponse, CreateLivenessSessionResponse, AwsCredentialsResponse, UploadDocumentResponse, ValidateDocumentResponse)
 @Controller()
 export class RekognitionController {
     constructor(
@@ -13,31 +19,100 @@ export class RekognitionController {
 
     @Version("1")
     @Post("create-liveness-session")
+    @ApiOperation({ summary: 'Create a new Face Liveness session' })
+    @ApiResponse({
+        status: 201,
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(StandardApiResponse) },
+                {
+                    properties: {
+                        data: {
+                            $ref: getSchemaPath(CreateLivenessSessionResponse),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     async createLivenessSession() {
         return this.rekognitionService.createLivenessSession();
     }
 
     @Version("1")
     @Get("aws-credentials")
+    @ApiOperation({ summary: 'Get temporary AWS credentials' })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(StandardApiResponse) },
+                {
+                    properties: {
+                        data: {
+                            $ref: getSchemaPath(AwsCredentialsResponse),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     async getAwsCredentials() {
         return this.rekognitionService.getAwsCredentials();
     }
 
     @Version("1")
     @Get("result-session")
+    @ApiOperation({ summary: 'Get results of a Face Liveness session' })
     async getSessionResult(@Query('sessionId') sessionId: string) {
         return this.rekognitionService.getSessionResult(sessionId);
     }
 
     @Version("1")
     @Post("upload-document")
-    async uploadDocument(@Body() body: any) {
+    @ApiOperation({ summary: 'Upload a document for verification' })
+    @ApiResponse({
+        status: 201,
+        description: 'Document uploaded successfully',
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(StandardApiResponse) },
+                {
+                    properties: {
+                        data: {
+                            $ref: getSchemaPath(UploadDocumentResponse),
+                        },
+                    },
+                },
+            ],
+        },
+    })
+    @ApiBody({ type: UploadDocumentDto })
+    async uploadDocument(@Body() body: UploadDocumentDto) {
         return this.s3Service.uploadDocument(body);
     }
 
     @Version("1")
     @Post("validate-document")
-    async validateDocument(@Body() body: any) {
+    @ApiOperation({ summary: 'Validate a document and verify face match' })
+    @ApiResponse({
+        status: 201,
+        description: 'Validation result',
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(StandardApiResponse) },
+                {
+                    properties: {
+                        data: {
+                            $ref: getSchemaPath(ValidateDocumentResponse),
+                        },
+                    },
+                },
+            ],
+        },
+    })
+    @ApiBody({ type: ValidateDocumentDto })
+    async validateDocument(@Body() body: ValidateDocumentDto) {
         try {
             const { documentId, s3Key, documentType, sessionId } = body;
             if (!s3Key) {
