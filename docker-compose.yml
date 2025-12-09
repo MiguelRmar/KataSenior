@@ -9,6 +9,8 @@ services:
       - "3000:3000"
     env_file:
       - ./back-end/environments/.env
+    networks:
+      - elastic
 
   frontend:
     build:
@@ -18,3 +20,72 @@ services:
       - "5173:80"
     depends_on:
       - backend
+    networks:
+      - elastic
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=es-docker-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.10
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:7.17.10
+    container_name: apm-server
+    depends_on:
+      - elasticsearch
+      - kibana
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    cap_drop:
+      - ALL
+    ports:
+      - "8200:8200"
+    command: >
+      apm-server -e
+        -E apm-server.rum.enabled=true
+        -E setup.kibana.host=kibana:5601
+        -E setup.template.settings.index.number_of_replicas=0
+        -E apm-server.kibana.enabled=true
+        -E apm-server.kibana.host=kibana:5601
+        -E output.elasticsearch.hosts=["elasticsearch:9200"]
+    networks:
+      - elastic
+
+volumes:
+  esdata:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge

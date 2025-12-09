@@ -32,7 +32,16 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const elastic_apm_node_1 = __importDefault(require("elastic-apm-node"));
+elastic_apm_node_1.default.start({
+    serviceName: 'kata-senior-backend',
+    serverUrl: process.env.ELASTIC_APM_SERVER_URL || 'http://localhost:8200',
+    environment: process.env.NODE_ENV || 'development',
+});
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");

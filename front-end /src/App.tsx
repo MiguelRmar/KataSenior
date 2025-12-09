@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { LivenessComponent } from '@presentation/components/LivenessComponent'
 import { DocumentCapture } from '@presentation/pages/DocumentCapture'
-import { Login } from '@presentation/pages/Login/Login'
 import { AuthHttpRepository } from '@infrastructure/adapters/http/AuthHttpRepository'
 
 function App() {

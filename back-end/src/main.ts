@@ -1,3 +1,11 @@
+import apm from 'elastic-apm-node';
+
+apm.start({
+  serviceName: 'kata-senior-backend',
+  serverUrl: process.env.ELASTIC_APM_SERVER_URL || 'http://localhost:8200',
+  environment: process.env.NODE_ENV || 'development',
+});
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
@@ -27,7 +35,7 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'], // Frontend URLs
+    origin: true, // Allow all origins by reflecting the request origin
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization, apiKey, channel, xname',
     credentials: true,

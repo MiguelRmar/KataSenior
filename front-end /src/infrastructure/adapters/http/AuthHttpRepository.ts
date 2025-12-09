@@ -35,7 +35,7 @@ export class AuthHttpRepository {
             if (data.success && data.data) {
                 const decryptedData = typeof data.data === 'string'
                     ? this.encryptionService.decrypt(data.data)
-                    : data.data; // Fallback if not encrypted (during migration)
+                    : data.data;
 
                 if (decryptedData && decryptedData.access_token) {
                     console.log('[Frontend] Login successful. New token:', decryptedData.access_token.substring(0, 10) + '...');
