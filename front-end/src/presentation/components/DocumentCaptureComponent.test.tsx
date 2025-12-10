@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { DocumentCaptureComponent } from './DocumentCaptureComponent';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -12,7 +12,7 @@ describe('DocumentCaptureComponent', () => {
         vi.clearAllMocks();
 
         // Mock navigator.mediaDevices.getUserMedia
-        Object.defineProperty(global.navigator, 'mediaDevices', {
+        Object.defineProperty(window.navigator, 'mediaDevices', {
             value: {
                 getUserMedia: vi.fn().mockResolvedValue(mockStream),
             },
